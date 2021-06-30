@@ -27,7 +27,22 @@ router.post("/", validateSession, async (req, res) => {
 
 router.get("/", validateSession, async (req, res) => {
     try {
-        const alllogs = await Log.findAll({
+        const allLogs = await Log.findAll({
+            where: { owner_id: req.user.id },
+        }); 
+        res.status(200).json(
+            {allLogs}
+        );
+    } catch (error) {
+        res.status(500).json({
+        error: `You have an error: ${error}`
+    });
+    }
+});
+
+router.get("/:id", validateSession, async (req, res) => {
+    try {
+        const allLogs = await Log.findAll({
             where: { owner_id: req.user.id },
         }); 
         res.status(200).json(
@@ -44,49 +59,46 @@ router.delete("/:id", validateSession, async (req, res) => {
     // router.delete("/delete/:id", async (req, res) => {
     // const logId = req.params.id;
     // await Log.destroy({where: {id: logId}})
-    const logToDelete = req.params.name;
+    const logToDelete = req.user.id;
     try {
     
         let log = await Log.findOne({ 
         where: { 
-        name: animalToDelete,
-        userId: req.user.id
+        owner_id: req.user.id
         }
         });
 
-        if (animal) {
+        if (Log) {
         const query = {
             where: {
-            id: animal.id,
-            userId: req.user.id
+            owner_id: req.user.id
             },
         };
     
-        await Animal.destroy(query);
+        await Log.destroy(query);
     
         res.status(200).json({
-            message: `This animal ${animalToDelete} has been deleted`,
+            message: `This log has been deleted`,
         });
         } else {
         res.status(200).json({
-            message: "Animal not found"
+            message: "Log not found"
             })
         }
     
     } catch (error) {
         res.status(500).json({
-        message: `There was an issue deleting this animal: ${error}`,
+        message: `There was an issue deleting this log: ${error}`,
         error,
         });
     }
     });
 
 router.put("/:id", validateSession, async (req, res) => {
-    const {description, definition, result} = req.body.animal;
+    const {description, definition, result} = req.body.log;
 
     const query = {
     where: {
-    id:  req.params.id,
     owner_id: req.user.id
     }
 }
@@ -98,7 +110,7 @@ const updatedLog = {
     }
 
 try {
-    const update = await Animal.update(updatedAnimal, query);
+    const update = await Log.update(updatedLog, query);
     res.status(200).json({
     message: "Log changed!",
     update
